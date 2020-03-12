@@ -18,7 +18,7 @@ This project has an installer script that will install it locally.
 You can fetch that script, and then execute it locally. It's well documented so that you can read through it and understand what it is doing before you run it.
 
 ```shell
-curl -fsSL https://github.com/nico-swan-cygnus-labs/provisioner_wordpress_docker/master/scripts/setup -o setup.sh
+curl -fsSL https://github.com/nico-swan-cygnus-labs/provisioner_wordpress_docker/raw/master/scripts/setup -o setup.sh
 bash setup.sh
 ```
 
