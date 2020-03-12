@@ -3,6 +3,8 @@
 PROJECT_NAME="cygnus-labs"
 ETC_HOSTS=/etc/hosts
 LOCALHOST_IP="127.0.0.1"
+PROXY_HTTP_PORT=80
+PROXY_HTTPS_PORT=443
 
 # initOS discovers the operating system for this system.
 initOS() {
@@ -226,12 +228,7 @@ addHost() {
 # check if ports 80 and 443 are free.
 # need to update this to include other ports.
 portsFree() {
-	if [[ -z "$PROXY_HTTP_PORT" ]]; then
-		PROXY_HTTP_PORT=80
-	fi
-	if [[ -z "$PROXY_HTTPS_PORT" ]]; then
-		PROXY_HTTPS_PORT=443
-	fi
+	
 	ports=( $PROXY_HTTP_PORT $PROXY_HTTPS_PORT )
 	free=0
 	for port in "${ports[@]}" ; do
