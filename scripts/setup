@@ -12,8 +12,8 @@ initOS() {
 # runs the given command as root (detects if we are root already)
 runAsRoot() {
         local CMD="$*"
-
-        if [ $EUID -ne 0 ]; then
+        initOS 
+        if [[ $EUID -ne 0  &&  "$OS" != "mingw64_nt-10.0" ]]; then
                 CMD="sudo $CMD"
         fi
 
@@ -63,6 +63,7 @@ initCygnusLabs() {
         fi
 
         echo "CYGNUSLABS_INSTALL_DIR=$CYGNUSLABS_INSTALL_DIR" >> ~/.cygnus-labs/config
+
 }
 
 # cloneRepo clones the repository to a temporary location
@@ -79,10 +80,15 @@ installScript() {
                 CYGNUSLABS_INSTALL_DIR="${CYGNUSLABS_INSTALL_DIR:-/opt/$PROJECT_NAME}"
         elif [[ "$OS" == 'darwin' ]]; then
                 CYGNUSLABS_INSTALL_DIR="${CYGNUSLABS_INSTALL_DIR:-/Applications/$PROJECT_NAME}"
+		elif [[ "$OS" == 'mingw64_nt-10.0' ]]; then	
+		        CYGNUSLABS_INSTALL_DIR="${CYGNUSLABS_INSTALL_DIR:-/opt/$PROJECT_NAME}"	
         fi
         CYGNUSLABS_SCRIPT="scripts/cygnus-labs"
-        CYGNUSLABS_SCRIPT_INSTALL_PATH="${CYGNUSLABS_SCRIPT_INSTALL_PATH:-/usr/local/bin/$PROJECT_NAME}"
-
+		if [[ "$OS" == 'mingw64_nt-10.0' ]]; then
+		    CYGNUSLABS_SCRIPT_INSTALL_PATH="${CYGNUSLABS_SCRIPT_INSTALL_PATH:-/usr/bin/$PROJECT_NAME}"
+        else
+		    CYGNUSLABS_SCRIPT_INSTALL_PATH="${CYGNUSLABS_SCRIPT_INSTALL_PATH:-/usr/local/bin/$PROJECT_NAME}"
+        fi  
         rm -rf "$CYGNUSLABS_INSTALL_DIR"
         echo "Preparing to install into $CYGNUSLABS_INSTALL_DIR"
         runAsRoot cp -r "$CYGNUSLABS_TMP_REPO" "$CYGNUSLABS_INSTALL_DIR"

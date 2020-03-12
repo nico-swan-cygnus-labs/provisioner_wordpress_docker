@@ -226,7 +226,13 @@ addHost() {
 # check if ports 80 and 443 are free.
 # need to update this to include other ports.
 portsFree() {
-	ports=( 80 443 )
+	if [[ -z "$PROXY_HTTP_PORT" ]]; then
+		PROXY_HTTP_PORT=80
+	fi
+	if [[ -z "$PROXY_HTTPS_PORT" ]]; then
+		PROXY_HTTPS_PORT=443
+	fi
+	ports=( $PROXY_HTTP_PORT $PROXY_HTTPS_PORT )
 	free=0
 	for port in "${ports[@]}" ; do
 		# count the number of occurrences of $port in output: 1 = in use; 0 = not in use
@@ -234,7 +240,9 @@ portsFree() {
 			checkPortCMD="netstat -lnp tcp | grep "
 		elif [[ "$OS" == 'darwin' ]]; then
 			checkPortCMD="netstat -anp tcp | grep LISTEN | grep "
-		fi
+		elif [[ "$OS" == 'mingw64_nt-10.0' ]]; then
+		    checkPortCMD="netstat -a -n -p tcp | grep LISTENING | grep "
+		fi	
 		runAsRoot $checkPortCMD $port > /dev/null 2>&1
 		if [ "$?" -eq 1 ]; then
 			free=1
@@ -275,7 +283,8 @@ runNginxProxyAndLetsEncrypt() {
 		if ! portsFree; then
 			echo "Please make sure ports 80 and 443 are free."
 		else
-			docker run --name nginx-proxy --restart always -d -p 80:80 -p 443:443 \
+		    
+			docker run --name nginx-proxy --restart always -d -p $PROXY_HTTP_PORT:80 -p $PROXY_HTTPS_PORT:443 \
 				-v ~/.cygnus-labs/etc/nginx/certs:/etc/nginx/certs \
 				-v ~/.cygnus-labs/etc/nginx/conf.d:/etc/nginx/conf.d \
 				-v ~/.cygnus-labs/etc/nginx/htpasswd:/etc/nginx/htpasswd \
