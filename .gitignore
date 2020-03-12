@@ -1,0 +1,7 @@
+app
+logs
+test*
+codeception.yml
+composer.json
+logo.jpg
+vendor

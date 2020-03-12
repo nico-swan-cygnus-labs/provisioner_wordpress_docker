@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+
+PROJECT_NAME="cygnus_provisioner"
+REPO_URL="${REPO_URL:-https://github.com/nico-swan-cygnus-labs/provisioner_wordpress_docker}"
+VERSION="${VERSION:-master}"
+
+# initOS discovers the operating system for this system.
+initOS() {
+	OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
+}
+
+# runs the given command as root (detects if we are root already)
+runAsRoot() {
+	local CMD="$*"
+
+	if [ $EUID -ne 0 ]; then
+		CMD="sudo $CMD"
+	fi
+
+	$CMD
+}
+
+# fail_trap is executed if an error occurs.
+fail_trap() {
+	result=$?
+	if [ "$result" != "0" ]; then
+		echo -e "\n\nFailed to install $PROJECT_NAME"
+		echo "For support, go to https://github.com/nico-swan-cygnus-labs/provisioner_wordpress_docker."
+	fi
+	cleanup
+	exit $result
+}
+
+# cleanup temporary files
+cleanup() {
+	rm -rf "$CYGNUSLABS_TMP_ROOT"
+}
+
+# checks dependencies requried to run this setup
+checkDependencies() {
+	dependencies=(
+	"git^git - https://git-scm.com/downloads"
+	"docker^docker - https://docs.docker.com/engine/installation"
+	"docker-compose^docker-compose - https://docs.docker.com/compose/install" )
+
+	pass=0
+
+	for dependency in "${dependencies[@]}" ; do
+		dep="${dependency%%^*}"
+		msg="${dependency##*^}"
+		if ! type "$dep" > /dev/null 2>&1; then
+			echo "Please install $msg"
+			pass=1
+		fi
+	done
+
+	return $pass
+}
+
+initCynusLabs() {
+	if ! [[ -d ~/.cygnus-labs ]]; then
+		mkdir ~/.cygnus-labs
+	fi
+
+	echo "CYGNUSLABS_INSTALL_DIR=$CYGNUSLABS_INSTALL_DIR" >> ~/.cygnus-labs/config
+}
+
+# cloneRepo clones the repository to a temporary location
+cloneRepo() {
+	CYGNUSLABS_TMP_ROOT="$(mktemp -dt cygnuslabs-installer-XXXXXX)"
+	CYGNUSLABS_TMP_REPO="$CYGNUSLABS_TMP_ROOT/docker-compose-wordpress"
+	echo "Clone repo $REPO_URL"
+	git clone -b "$VERSION" "$REPO_URL" "$CYGNUSLABS_TMP_REPO"
+}
+
+# installScript installs the main script.
+installScript() {
+	if [[ "$OS" == 'linux' ]]; then
+		CYGNUSLABS_INSTALL_DIR="${CYGNUSLABS_INSTALL_DIR:-/opt/$PROJECT_NAME}"
+	elif [[ "$OS" == 'darwin' ]]; then
+		CYGNUSLABS_INSTALL_DIR="${CYGNUSLABS_INSTALL_DIR:-/Applications/$PROJECT_NAME}"
+	fi
+	CYGNUSLABS_SCRIPT="scripts/cygnus-labs"
+	CYGNUSLABS_SCRIPT_INSTALL_PATH="${CYGNUSLABS_SCRIPT_INSTALL_PATH:-/usr/local/bin/ee4}"
+
+	rm -rf "$CYGNUSLABS_INSTALL_DIR"
+	echo "Preparing to install into $CYGNUSLABS_INSTALL_DIR"
+	runAsRoot cp -r "$CYGNUSLABS_TMP_REPO" "$CYGNUSLABS_INSTALL_DIR"
+	runAsRoot ln -s "$CYGNUSLABS_INSTALL_DIR/$CYGNUSLABS_SCRIPT" "$CYGNUSLABS_SCRIPT_INSTALL_PATH"
+	echo -e "\nInstall complete!"
+	initEE4
+	echo "Run '$PROJECT_NAME' to get started."
+}
+
+# testVersion tests the installed script to make sure it is working.
+testInstalled() {
+	CYGNUSLABS_INSTALLED="$(which $PROJECT_NAME)"
+	if [ "$?" = "1" ]; then
+		return 1
+	else
+		echo "$PROJECT_NAME already installed into $CYGNUSLABS_INSTALLED"
+		return 0
+	fi
+}
+
+# Execution
+
+#Stop execution on any error
+trap "fail_trap" EXIT
+set -e
+
+initOS
+if ! testInstalled; then
+	if ! checkDependencies; then
+		exit 1;
+	fi
+	cloneRepo
+	installScript
+fi
+cleanup
