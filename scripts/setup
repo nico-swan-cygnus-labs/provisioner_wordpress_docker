@@ -57,7 +57,7 @@ checkDependencies() {
 	return $pass
 }
 
-initCynusLabs() {
+initCygnusLabs() {
 	if ! [[ -d ~/.cygnus-labs ]]; then
 		mkdir ~/.cygnus-labs
 	fi
