@@ -81,14 +81,14 @@ installScript() {
 		CYGNUSLABS_INSTALL_DIR="${CYGNUSLABS_INSTALL_DIR:-/Applications/$PROJECT_NAME}"
 	fi
 	CYGNUSLABS_SCRIPT="scripts/cygnus-labs"
-	CYGNUSLABS_SCRIPT_INSTALL_PATH="${CYGNUSLABS_SCRIPT_INSTALL_PATH:-/usr/local/bin/ee4}"
+	CYGNUSLABS_SCRIPT_INSTALL_PATH="${CYGNUSLABS_SCRIPT_INSTALL_PATH:-/usr/local/bin/cygnus-labs}"
 
 	rm -rf "$CYGNUSLABS_INSTALL_DIR"
 	echo "Preparing to install into $CYGNUSLABS_INSTALL_DIR"
 	runAsRoot cp -r "$CYGNUSLABS_TMP_REPO" "$CYGNUSLABS_INSTALL_DIR"
 	runAsRoot ln -s "$CYGNUSLABS_INSTALL_DIR/$CYGNUSLABS_SCRIPT" "$CYGNUSLABS_SCRIPT_INSTALL_PATH"
 	echo -e "\nInstall complete!"
-	initEE4
+	initCygnusLabs
 	echo "Run '$PROJECT_NAME' to get started."
 }
 
